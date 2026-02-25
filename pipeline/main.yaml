@@ -74,9 +74,9 @@ stages:
 
           echo "Creating plugins dir at: ${TF_PLUGIN_CACHE_DIR}"
           mkdir -p ${TF_PLUGIN_CACHE_DIR}
-    env:
-      TF_PLUGIN_CACHE_DIR: ${{ parameters.pluginCacheDir }}
-      INTERNET_DISABLED: ${{ parameters.disableInternet }}
+      env:
+        TF_PLUGIN_CACHE_DIR: ${{ parameters.pluginCacheDir }}
+        INTERNET_DISABLED: ${{ parameters.disableInternet }}
     # Install terraform version
     - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
       displayName: Installing Terraform ${{ parameters.terraformVersion }} (1)
