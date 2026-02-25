@@ -9,28 +9,62 @@ variables:
 
 # Define the stages of your pipeline
 stages:
-# Stage 1: Build
-- stage: Build
-  displayName: 'Build Stage'
+# Stage 1: Initialization
+- stage: init
+  displayName: 'Terraform init'
   jobs:
-  - job: BuildJob
-    displayName: 'Build Application'
+  - job: initTerraform
+    displayName: 'Init Terraform providers cache'
     pool:
       vmImage: $(vmImage)
     steps:
-    - checkout: self
-      displayName: 'Checkout code'
+    - task: Bash@3
+      displayName: Terraform configure
+      inputs:
+        targetType: 'inline'
+        failOnStderr: true
+        script: |
+          export TF_CLI_CONFIG_FILE="~/.terraformrc"
+          export TF_REGISTRY_DISCOVERY_RETRY=100
+          export TF_REGISTRY_CLIENT_TIMEOUT=100
+          # export TF_LOG="DEBUG"
+          echo "Creating ~/.terraformrc"
+        cat > ~/.terraformrc << EOF
+        disable_checkpoint = ${INTERNET_DISABLED,,}
+        EOF
+
+        if [ ${INTERNET_DISABLED,,} == "false" ] ; then
+          echo "Attaching plugin cache directory to the ~/.terraformrc"
+          cat >> ~/.terraformrc <<EOF
+          plugin_cache_dir = "${TF_PLUGIN_CACHE_DIR}"
+        EOF
+        fi
+
+        if [ ${INTERNET_DISABLED,,} == "true" ] ; then
+          echo "Attaching provider_installation to the ~/.terraformrc"
+          cat >> ~/.terraformrc <<EOF
+          provider_installation {
+            filesystem_mirror {
+              path    = "${TF_PLUGIN_CACHE_DIR}"
+              include = ["registry.terraform.io/*/*"]
+            }
+          }
+        EOF
+        fi
+
+        echo "-----=== ~/.terraformrc ===-----"
+        cat ~/.terraformrc
+        echo "-----=== ^^^ ===-----"
+
+        echo "Creating plugins dir at: ${TF_PLUGIN_CACHE_DIR}"
+        mkdir -p ${TF_PLUGIN_CACHE_DIR}
+    env:
+      TF_PLUGIN_CACHE_DIR: ${{ parameters.pluginCacheDir }}
+      INTERNET_DISABLED: ${{ parameters.disableInternet }}
+
+          
     
-    - script: |
-        echo "Building $(projectName)..."
-        mkdir -p artifacts
-        echo "Build completed at $(Build.BuildId)" > artifacts/build-info.txt
-        echo "Sample build output" > artifacts/sample.txt
-      displayName: 'Build Application'
-    
-    - publish: artifacts
-      artifact: drop
-      displayName: 'Publish build artifacts'
+  
 
 # Stage 2: Test
 - stage: Test
