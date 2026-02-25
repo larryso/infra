@@ -116,15 +116,15 @@ stages:
         # TF_VAR_build_number: $(Build.BuildNumber)
         # TF_IN_AUTOMATION: true
         
-     # Publish terraform binaries as a pipeline artifact
-     - publish: $(Agent.ToolsDirectory)/terraform/
-       artifact: terraform
-       displayName: Publish Terraform artifact
+    # Publish terraform binaries as a pipeline artifact
+    - publish: $(Agent.ToolsDirectory)/terraform/
+      artifact: terraform
+      displayName: Publish Terraform artifact
 
-     # Publish terraform plugin cache as a pipeline artifact
-     - publish: ${{ parameters.pluginCacheDir }}
-       artifact: terraform_plugins
-       displayName: Publish Terraform plugin cache artifact
+    # Publish terraform plugin cache as a pipeline artifact
+    - publish: ${{ parameters.pluginCacheDir }}
+      artifact: terraform_plugins
+      displayName: Publish Terraform plugin cache artifact
         
 # Stage 2: Test
 - stage: Test
