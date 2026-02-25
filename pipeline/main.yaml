@@ -1,0 +1,109 @@
+# Simple Azure DevOps Pipeline with Stages
+trigger:
+- master  # Pipeline runs when changes are pushed to main branch
+
+# Define variables that can be used throughout the pipeline
+variables:
+  vmImage: 'ubuntu-latest'
+  projectName: 'MyWebApp'
+
+# Define the stages of your pipeline
+stages:
+# Stage 1: Build
+- stage: Build
+  displayName: 'Build Stage'
+  jobs:
+  - job: BuildJob
+    displayName: 'Build Application'
+    pool:
+      vmImage: $(vmImage)
+    steps:
+    - checkout: self
+      displayName: 'Checkout code'
+    
+    - script: |
+        echo "Building $(projectName)..."
+        mkdir -p artifacts
+        echo "Build completed at $(Build.BuildId)" > artifacts/build-info.txt
+        echo "Sample build output" > artifacts/sample.txt
+      displayName: 'Build Application'
+    
+    - publish: artifacts
+      artifact: drop
+      displayName: 'Publish build artifacts'
+
+# Stage 2: Test
+- stage: Test
+  displayName: 'Test Stage'
+  dependsOn: Build  # This stage runs after Build stage
+  condition: succeeded()  # Only run if Build succeeded
+  jobs:
+  - job: TestJob
+    displayName: 'Run Tests'
+    pool:
+      vmImage: $(vmImage)
+    steps:
+    - download: current
+      artifact: drop
+      displayName: 'Download artifacts'
+    
+    - script: |
+        echo "Testing $(projectName)..."
+        cat $(Pipeline.Workspace)/drop/build-info.txt
+        echo "Running unit tests..."
+        echo "All tests passed!"
+      displayName: 'Execute Tests'
+
+# Stage 3: Deploy to Development
+- stage: DevDeploy
+  displayName: 'Deploy to Development'
+  dependsOn: Test  # This stage runs after Test stage
+  condition: succeeded()  # Only run if Test succeeded
+  jobs:
+  - job: DevDeployJob
+    displayName: 'Deploy to Dev Environment'
+    pool:
+      vmImage: $(vmImage)
+    steps:
+    - download: current
+      artifact: drop
+      displayName: 'Download artifacts'
+    
+    - script: |
+        echo "Deploying $(projectName) to Development environment..."
+        echo "Build ID: $(Build.BuildId)"
+        echo "Deployment to Dev completed successfully!"
+        echo "Application URL: https://dev.$(projectName).com"
+      displayName: 'Deploy to Dev'
+
+# Stage 4: Deploy to Production (with approval)
+- stage: ProdDeploy
+  displayName: 'Deploy to Production'
+  dependsOn: DevDeploy  # This stage runs after DevDeploy stage
+  condition: succeeded()  # Only run if DevDeploy succeeded
+  jobs:
+  - deployment: ProdDeployJob
+    displayName: 'Deploy to Production'
+    pool:
+      vmImage: $(vmImage)
+    environment: 'production'  # Creates/uses an environment named 'production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: drop
+            displayName: 'Download artifacts'
+          
+          - script: |
+              echo "Deploying $(projectName) to Production environment..."
+              echo "Build ID: $(Build.BuildId)"
+              echo "Performing production deployment..."
+              echo "Deployment to Production completed successfully!"
+              echo "Production URL: https://www.$(projectName).com"
+            displayName: 'Deploy to Production'
+          
+          - script: |
+              echo "Running smoke tests on production..."
+              echo "All smoke tests passed!"
+            displayName: 'Smoke Tests'
