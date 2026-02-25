@@ -51,12 +51,12 @@ stages:
 
           if [ ${INTERNET_DISABLED} == "false" ] ; then
             echo "Attaching plugin cache directory to the ~/.terraformrc"
-            cat >> ~/.terraformrc <<EOF
+            cat >> ~/.terraformrc << EOF
             plugin_cache_dir = "${TF_PLUGIN_CACHE_DIR}"
             EOF
           fi
 
-          if [ ${INTERNET_DISABLED,,} == "true" ] ; then
+          if [ ${INTERNET_DISABLED} == "true" ] ; then
             echo "Attaching provider_installation to the ~/.terraformrc"
             cat >> ~/.terraformrc <<EOF
             provider_installation {
