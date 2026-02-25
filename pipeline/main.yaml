@@ -21,7 +21,7 @@ parameters:
 # Define variables that can be used throughout the pipeline
 variables:
   vmImage: 'ubuntu-latest'
-  projectName: 'MyWebApp'
+  projectName: 'Infra Release'
 
 # Define the stages of your pipeline
 stages:
@@ -88,7 +88,7 @@ stages:
       inputs:
         targetType: 'inline'
         failOnStderr: true
-        workingDirectory: ${{ parameters.terraformCodePath }}
+        workingDirectory: $(Build.SourcesDirectory)/0-infra-core
         script: |
           echo "ALICLOUD_REGION: ${ALICLOUD_REGION}"
           echo "OSS_ENDPOINT: ${TF_BACKEND_ALI_OSS_ENDPOINT}"
@@ -129,7 +129,7 @@ stages:
 # Stage 2: Test
 - stage: Test
   displayName: 'Test Stage'
-  dependsOn: Build  # This stage runs after Build stage
+  dependsOn: init  # This stage runs after Build stage
   condition: succeeded()  # Only run if Build succeeded
   jobs:
   - job: TestJob
