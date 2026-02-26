@@ -133,7 +133,7 @@ stages:
       displayName: Publish Terraform plugin cache artifact
 
 # Release Dev        
-- template: env_group.yml@ado-leap
+- template: group_deployment.yml
   parameters:
     tfPool: ${{ parameters.tfPool }}
     envClass: "prod"
@@ -144,7 +144,7 @@ stages:
     adoEnvironment: "Dev"
 
 # Release UAT        
-- template: env_group.yml@ado-leap
+- template: group_deployment.yml
   parameters:
     tfPool: ${{ parameters.tfPool }}
     envClass: "prod"
@@ -155,7 +155,7 @@ stages:
     adoEnvironment: "Dev"
     
 # Release PROD        
-- template: env_group.yml@ado-leap
+- template: group_deployment.yml
   parameters:
     tfPool: ${{ parameters.tfPool }}
     envClass: "prod"
