@@ -139,7 +139,6 @@ stages:
     envClass: "prod"
     envGroup: "prod"
     envType: "controlled"
-    infraComponents: ${{ parameters.infraComponents }}
     action: ${{ parameters.action }}
     stageName: "create"
     adoEnvironment: "Dev"
@@ -151,7 +150,6 @@ stages:
     envClass: "prod"
     envGroup: "prod"
     envType: "controlled"
-    infraComponents: ${{ parameters.infraComponents }}
     action: ${{ parameters.action }}
     stageName: "create"
     adoEnvironment: "Dev"
@@ -163,7 +161,6 @@ stages:
     envClass: "prod"
     envGroup: "prod"
     envType: "controlled"
-    infraComponents: ${{ parameters.infraComponents }}
     action: ${{ parameters.action }}
     stageName: "create"
     adoEnvironment: "Dev"
