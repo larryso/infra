@@ -18,11 +18,11 @@ stages:
   - stage: '${{ parameters.stageName }}'
     ${{ if eq(parameters.action, 'create') }}:
         displayName: '${{ parameters.stageName }} - Plan Create'
-      ${{ if eq(parameters.action, 'destroy') }}:
+    ${{ if eq(parameters.action, 'destroy') }}:
         displayName: '${{ parameters.stageName }} - Plan Destroy'
-      ${{ if eq(parameters.action, 'rotate') }}:
+    ${{ if eq(parameters.action, 'rotate') }}:
         displayName: '${{ parameters.stageName }} - Plan Rotate'
-      ${{ if eq(parameters.action, 'none') }}:
+    ${{ if eq(parameters.action, 'none') }}:
         displayName: '${{ parameters.stageName }} - Plan None'
       dependsOn:
         - 'initialize_DEV'
