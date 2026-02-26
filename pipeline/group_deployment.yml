@@ -1,0 +1,66 @@
+parameters:     
+  - name: action
+    type: string
+  - name: tfPool
+    type: string
+  - name: stageName
+    type: string
+  - name: dependsOn
+    type: object
+    default: {}
+  - name: adoEnvironment
+    type: string
+  - name: pluginCacheDir
+    type: string
+
+    
+stages: 
+  - stage: '${{ parameters.stageName }}'
+    ${{ if eq(parameters.action, 'create') }}:
+        displayName: '${{ parameters.stageName }} - Plan Create'
+      ${{ if eq(parameters.action, 'destroy') }}:
+        displayName: '${{ parameters.stageName }} - Plan Destroy'
+      ${{ if eq(parameters.action, 'rotate') }}:
+        displayName: '${{ parameters.stageName }} - Plan Rotate'
+      ${{ if eq(parameters.action, 'none') }}:
+        displayName: '${{ parameters.stageName }} - Plan None'
+      dependsOn:
+        - 'initialize_DEV'
+        - ${{ each dep in parameters.dependsOn }}:
+          - ${{ dep }}
+      jobs:
+        - deployment: '${{ parameters.stageName }}'
+          ${{ if eq(parameters.action, 'create') }}:
+            displayName: '${{ parameters.stageName }} - Plan Create'
+          ${{ if eq(parameters.action, 'destroy') }}:
+            displayName: '${{ parameters.stageName }} - Plan Destroy'
+          ${{ if eq(parameters.action, 'rotate') }}:
+            displayName: '${{ parameters.stageName }} - Plan Rotate'
+          ${{ if eq(parameters.action, 'none') }}:
+            displayName: '${{ parameters.stageName }} - Plan None'
+          environment: '${{ parameters.adoEnvironment }}'
+          pool:
+            name: ${{ parameters.tfPool }}
+          condition: succeeded()
+          workspace:
+            clean: all
+          strategy:
+            runOnce:
+              deploy:
+                steps:
+                  - download: none
+                  # Load secrets
+                  ## TODO
+                  - task: DownloadPipelineArtifact@2
+                    displayName: Pull terraform artifact
+                    inputs:
+                      source: current
+                      path: $(Agent.ToolsDirectory)/terraform/
+                      artifact: terraform
+
+                  - task: DownloadPipelineArtifact@2
+                    displayName: Pull terraform plugin cache artifact
+                    inputs:
+                      source: current
+                      path: ${{ parameters.pluginCacheDir }}
+                      artifact: terraform_plugins
