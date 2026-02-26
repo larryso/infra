@@ -64,3 +64,14 @@ stages:
                       source: current
                       path: ${{ parameters.pluginCacheDir }}
                       artifact: terraform_plugins
+
+                  # Output build info
+                  - task: Bash@3
+                    displayName: Release information
+                    inputs:
+                      targetType: 'inline'
+                      failOnStderr: true
+                      workingDirectory: $(Agent.BuildDirectory)
+                      script: |
+                        echo "envClass: @@@@@@@@@@"
+          
