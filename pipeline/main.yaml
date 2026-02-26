@@ -17,6 +17,12 @@ parameters:
     default:
       enabled: false
       key: ''
+  - name: action
+    type: string
+    default: "create"
+  - name: tfPool
+    type: string
+    default: "ubuntu-latest"
 
 # Define variables that can be used throughout the pipeline
 variables:
@@ -125,79 +131,40 @@ stages:
     - publish: ${{ parameters.pluginCacheDir }}
       artifact: terraform_plugins
       displayName: Publish Terraform plugin cache artifact
-        
-# Stage 2: Test
-- stage: Test
-  displayName: 'Test Stage'
-  dependsOn: init  # This stage runs after Build stage
-  condition: succeeded()  # Only run if Build succeeded
-  jobs:
-  - job: TestJob
-    displayName: 'Run Tests'
-    pool:
-      vmImage: $(vmImage)
-    steps:
-    - download: current
-      artifact: drop
-      displayName: 'Download artifacts'
-    
-    - script: |
-        echo "Testing $(projectName)..."
-        cat $(Pipeline.Workspace)/drop/build-info.txt
-        echo "Running unit tests..."
-        echo "All tests passed!"
-      displayName: 'Execute Tests'
 
-# Stage 3: Deploy to Development
-- stage: DevDeploy
-  displayName: 'Deploy to Development'
-  dependsOn: Test  # This stage runs after Test stage
-  condition: succeeded()  # Only run if Test succeeded
-  jobs:
-  - job: DevDeployJob
-    displayName: 'Deploy to Dev Environment'
-    pool:
-      vmImage: $(vmImage)
-    steps:
-    - download: current
-      artifact: drop
-      displayName: 'Download artifacts'
-    
-    - script: |
-        echo "Deploying $(projectName) to Development environment..."
-        echo "Build ID: $(Build.BuildId)"
-        echo "Deployment to Dev completed successfully!"
-        echo "Application URL: https://dev.$(projectName).com"
-      displayName: 'Deploy to Dev'
+# Release Dev        
+- template: env_group.yml@ado-leap
+  parameters:
+    tfPool: ${{ parameters.tfPool }}
+    envClass: "prod"
+    envGroup: "prod"
+    envType: "controlled"
+    infraComponents: ${{ parameters.infraComponents }}
+    action: ${{ parameters.action }}
+    stageName: "create"
+    adoEnvironment: "Dev"
 
-# Stage 4: Deploy to Production (with approval)
-- stage: ProdDeploy
-  displayName: 'Deploy to Production'
-  dependsOn: DevDeploy  # This stage runs after DevDeploy stage
-  condition: succeeded()  # Only run if DevDeploy succeeded
-  jobs:
-  - deployment: ProdDeployJob
-    displayName: 'Deploy to Production'
-    pool:
-      vmImage: $(vmImage)
-    environment: 'production'  # Creates/uses an environment named 'production'
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - download: current
-            artifact: drop
-            displayName: 'Download artifacts'
-          
-          - script: |
-              echo "Deploying $(projectName) to Production environment..."
-              echo "Build ID: $(Build.BuildId)"
-              echo "Performing production deployment..."
-              echo "Deployment to Production completed successfully!"
-              echo "Production URL: https://www.$(projectName).com"
-            displayName: 'Deploy to Production'
-          
-          - script: |
-              echo "Running smoke tests on production..."
-              echo "All smoke tests passed!"
-            displayName: 'Smoke Tests'
+# Release UAT        
+- template: env_group.yml@ado-leap
+  parameters:
+    tfPool: ${{ parameters.tfPool }}
+    envClass: "prod"
+    envGroup: "prod"
+    envType: "controlled"
+    infraComponents: ${{ parameters.infraComponents }}
+    action: ${{ parameters.action }}
+    stageName: "create"
+    adoEnvironment: "Dev"
+    
+# Release PROD        
+- template: env_group.yml@ado-leap
+  parameters:
+    tfPool: ${{ parameters.tfPool }}
+    envClass: "prod"
+    envGroup: "prod"
+    envType: "controlled"
+    infraComponents: ${{ parameters.infraComponents }}
+    action: ${{ parameters.action }}
+    stageName: "create"
+    adoEnvironment: "Dev"
+    
