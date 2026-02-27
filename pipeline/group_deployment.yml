@@ -147,14 +147,15 @@ stages:
                     failOnStderr: true
                     workingDirectory: $(Build.SourcesDirectory)/0-infra-core
                     script: |
-                      tmp_dir=$(mktemp -d $(Build.SourcesDirectory)/0-infra-core/${{ parameters.stageName }}/ci-XXXXXX)
+                      tmp_dir=$(mktemp -d $(Build.SourcesDirectory)/0-infra-core/ci-XXXXXX)
                       echo "Tempdir: ${tmp_dir}"
 
                       echo "Adding ${{ parameters.stageName }}.tfplan"
                       cp ${{ parameters.stageName }}.tfplan $tmp_dir
+                      echo "##vso[task.setvariable variable=plan_dir;]${tmp_dir}"
 
                 ## publish terraform plan artifact - in real prod save artifact to cloud 
-                - publish: $(mktemp -d $(Build.SourcesDirectory)/0-infra-core/${{ parameters.stageName }})
+                - publish: $(plan_dir)
                   artifact: terraform-plan-${{ parameters.stageName }}
                   displayName: Publish Terraform artifact of terraform plan
 
