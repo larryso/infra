@@ -138,4 +138,183 @@ stages:
                       commandOptions: "-input=false -parallelism=${{ parameters.parallelism }} -out ${{ parameters.stageName }}.tfplan"
                     ${{ if eq(parameters.action, 'none') }}:
                       commandOptions: "-input=false -out ${{ parameters.stageName }}.tfplan"
-          
+
+                # Prepare terraform plan artifact
+                - task: Bash@3
+                  displayName: Prepare plan artifact
+                  inputs:
+                    targetType: 'inline'
+                    failOnStderr: true
+                    workingDirectory: $(Build.SourcesDirectory)/0-infra-core
+                    script: |
+                      tmp_dir=$(mktemp -d $(Build.SourcesDirectory)/0-infra-core/${{ parameters.stageName }})
+                      echo "Tempdir: ${tmp_dir}"
+
+                      echo "Adding ${{ parameters.stageName }}.tfplan"
+                      cp ${{ parameters.stageName }}.tfplan $tmp_dir
+
+                ## publish terraform plan artifact - in real prod save artifact to cloud 
+                - publish: $(mktemp -d $(Build.SourcesDirectory)/0-infra-core/${{ parameters.stageName }})
+                  artifact: terraform-plan-${{ parameters.stageName }}
+                  displayName: Publish Terraform artifact of terraform plan
+
+  # -----=== APPLY STAGE ===-----
+  - stage: 'apply_${{ parameters.stageName }}'
+    ${{ if eq(parameters.action, 'create') }}:
+      displayName: '${{ parameters.stageName }} - Apply Create'
+    ${{ if eq(parameters.action, 'destroy') }}:
+      displayName: '${{ parameters.stageName }} - Apply Destroy'
+    ${{ if eq(parameters.action, 'rotate') }}:
+      displayName: '${{ parameters.stageName }} - Apply Rotate'
+    ${{ if eq(parameters.action, 'none') }}:
+      displayName: '${{ parameters.stageName }} - Apply None'
+    environment: ${{ parameters.adoEnvironment }}
+    dependsOn: 
+      - ${{ parameters.stageName }}    
+    jobs:
+      - deployment: 'apply_${{ parameters.stageName }}'  
+        pool: 
+          name: 
+        condition: succeeded()
+        workspace:
+          clean: all
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  # Load secrets
+                  ## TODO
+                - task: DownloadPipelineArtifact@2
+                  displayName: Pull terraform artifact
+                  inputs:
+                    source: current
+                    path: $(Agent.ToolsDirectory)/terraform/
+                    artifact: terraform
+
+                - task: DownloadPipelineArtifact@2
+                  displayName: Pull terraform plugin cache artifact
+                  inputs:
+                    source: current
+                    path: ${{ parameters.pluginCacheDir }}
+                    artifact: terraform_plugins
+
+                # Output build info
+                - task: Bash@3
+                  displayName: Release information
+                  inputs:
+                    targetType: 'inline'
+                    failOnStderr: true
+                    workingDirectory: $(Agent.BuildDirectory)
+                    script: |
+                      echo "envClass: @@@@@@@@@@"
+                # Install terraform version for a component (should be taken from tools cache)
+                - task: TerraformInstaller@0
+                  displayName: Installing Terraform ${{ parameters.terraformVersion }}
+                  inputs:
+                    terraformVersion: ${{ parameters.terraformVersion }}
+
+                  # Set terraform providers permissions
+                - task: Bash@3
+                  displayName: Set terraform providers permissions
+                  inputs:
+                    targetType: 'inline'
+                    failOnStderr: true
+                    workingDirectory: $(Agent.BuildDirectory)
+                    script: |
+                      chmod -R 755 ${pluginCacheDir}/
+                  env:
+                    pluginCacheDir: ${{ parameters.pluginCacheDir }}
+
+                # Run terraform init
+                - task: Bash@3
+                  displayName: Run Terraform Init 
+                  inputs:
+                    targetType: 'inline'
+                    failOnStderr: true
+                    workingDirectory: $(Build.SourcesDirectory)/0-infra-core
+                    script: |
+                     pwd
+                     ls
+                     terraform init \
+                     -reconfigure \
+                     -input=false \
+                     -backend=${TF_BACKEND_ENABLED} \
+                  env:
+                    TF_BACKEND_ENABLED: false
+
+                # Download terraform plan
+                - template: steps/download_artifact.yml
+                    parameters:
+                      artifactName: plan_tf_${{ parameters.stageName }}_${{ component.name }}_$(attemptNo)
+                      downloadPath: $(Build.SourcesDirectory)/plan_tf_${{ component.terraformCodeFolder }}
+
+                - ${{ if eq(parameters.action, 'create') }}:
+                  - task: Bash@3
+                    displayName: Terraform Apply create
+                    inputs:
+                      targetType: 'inline'
+                      failOnStderr: true
+                      workingDirectory: $(Build.SourcesDirectory)/0-infra-core
+                      script: |
+                        echo "Starting terraform apply with parallelism=${{ parameters.parallelism }}"
+
+                        #terraform apply -input=false -parallelism=${{ parameters.parallelism }} $(Build.SourcesDirectory)/plan_tf_${{ component.terraformCodeFolder }}/${{ component.name }}.tfplan
+                    env:
+                      # ALICLOUD_ACCESS_KEY: $(setSecrets.ALICLOUD_ACCESS_KEY)
+                      # ALICLOUD_SECRET_KEY: $(setSecrets.ALICLOUD_SECRET_KEY)
+                      # ALICLOUD_REGION: $(ali.region)
+                      TF_IN_AUTOMATION: true
+
+                - ${{ if eq(parameters.action, 'destroy') }}:
+                  - task: Bash@3
+                    displayName: Terraform Apply destroy
+                    inputs:
+                      targetType: 'inline'
+                      failOnStderr: true
+                      workingDirectory: $(Build.SourcesDirectory)/0-infra-core
+                      script: |
+                        echo "good!"
+                        # terraform apply -destroy -input=false -parallelism=${{ parameters.parallelism }} ${{ parameters.planFileName }}
+                    env:
+                      # ALICLOUD_ACCESS_KEY: $(setSecrets.ALICLOUD_ACCESS_KEY)
+                      # ALICLOUD_SECRET_KEY: $(setSecrets.ALICLOUD_SECRET_KEY)
+                      # ALICLOUD_REGION: $(ali.region)
+                      TF_IN_AUTOMATION: true
+
+  # - ${{ if eq(parameters.action, 'rotate') }}:
+  #   - task: Bash@3
+  #     displayName: Terraform Apply Rotate
+  #     inputs:
+  #       targetType: 'inline'
+  #       failOnStderr: true
+  #       workingDirectory: ${{ parameters.terraformCodePath }}
+  #       script: |
+  #         echo "Starting terraform apply with parallelism=${{ parameters.parallelism }}"
+
+  #         echo "Checking for cpv_custom_secrets.json"
+  #         custom_secrets_file="$(Agent.BuildDirectory)/s/cpv_custom_secrets.json"
+
+  #         if [ -f "$custom_secrets_file" ]; then
+  #           echo "Loading secrets from $custom_secrets_file"
+  #           export $(jq -r '.cpv_custom_secrets | to_entries[] | "\(.key)=\(.value)"' "$custom_secrets_file")
+  #         else
+  #           echo "No cpv_custom_secrets.json found. Skipping secret export."
+  #         fi
+                    
+  #         terraform apply $(rotateCredentials) -input=false -parallelism=${{ parameters.parallelism }} ${{ parameters.planFileName }}
+  #     env:
+  #       ALICLOUD_ACCESS_KEY: $(setSecrets.ALICLOUD_ACCESS_KEY)
+  #       ALICLOUD_SECRET_KEY: $(setSecrets.ALICLOUD_SECRET_KEY)
+  #       ALICLOUD_REGION: $(ali.region)
+  #       TF_IN_AUTOMATION: true
+
+  # - ${{ if eq(parameters.action, 'none') }}:
+  #   - task: Bash@3
+  #     displayName: None action requested
+  #     inputs:
+  #       targetType: 'inline'
+  #       failOnStderr: true
+  #       workingDirectory: $(Agent.BuildDirectory)
+  #       script: |
+  #         echo "None action requested"
