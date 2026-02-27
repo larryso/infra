@@ -28,8 +28,8 @@ stages:
       - 'initialize_DEV'
       - ${{ each dep in parameters.dependsOn }}:
         - ${{ dep }}
-      jobs:
-        - deployment: '${{ parameters.stageName }}'
+    jobs:
+      - deployment: '${{ parameters.stageName }}'
           ${{ if eq(parameters.action, 'create') }}:
             displayName: '${{ parameters.stageName }} - Plan Create'
           ${{ if eq(parameters.action, 'destroy') }}:
