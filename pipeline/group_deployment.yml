@@ -109,5 +109,5 @@ stages:
                       -input=false \
                       -backend=${TF_BACKEND_ENABLED} \
                   env:
-                    TF_BACKEND_ENABLED: ${{ parameters.backend.enabled }}
+                    TF_BACKEND_ENABLED: false
           
