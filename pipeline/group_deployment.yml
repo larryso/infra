@@ -254,10 +254,12 @@ stages:
                     TF_BACKEND_ENABLED: false
 
                 # Download terraform plan
-                # - template: steps/download_artifact.yml
-                #     parameters:
-                #       artifactName: plan_tf_${{ parameters.stageName }}_${{ component.name }}_$(attemptNo)
-                #       downloadPath: $(Build.SourcesDirectory)/plan_tf_${{ component.terraformCodeFolder }}
+                - task: DownloadPipelineArtifact@2
+                  displayName: Pull terraform plan file artifact
+                  inputs:
+                    source: current
+                    path: $(Build.SourcesDirectory)/0-infra-core
+                    artifact: terraform-plan-${{ parameters.stageName }}
 
                 - ${{ if eq(parameters.action, 'create') }}:
                   - task: Bash@3
@@ -269,7 +271,7 @@ stages:
                       script: |
                         echo "Starting terraform apply with parallelism=${{ parameters.parallelism }}"
 
-                      
+                        terraform apply -input=false -parallelism=${{ parameters.parallelism }} $(Build.SourcesDirectory)/0-infra-core/${{ parameters.stageName }}.tfplan
                     env:
                       # ALICLOUD_ACCESS_KEY: $(setSecrets.ALICLOUD_ACCESS_KEY)
                       # ALICLOUD_SECRET_KEY: $(setSecrets.ALICLOUD_SECRET_KEY)
@@ -285,7 +287,7 @@ stages:
                       workingDirectory: $(Build.SourcesDirectory)/0-infra-core
                       script: |
                         echo "good!"
-                        # terraform apply -destroy -input=false -parallelism=${{ parameters.parallelism }} ${{ parameters.planFileName }}
+                        # terraform apply -destroy -input=false -parallelism=${{ parameters.parallelism }} $(Build.SourcesDirectory)/0-infra-core/${{ parameters.stageName }}.tfplan
                     env:
                       # ALICLOUD_ACCESS_KEY: $(setSecrets.ALICLOUD_ACCESS_KEY)
                       # ALICLOUD_SECRET_KEY: $(setSecrets.ALICLOUD_SECRET_KEY)
