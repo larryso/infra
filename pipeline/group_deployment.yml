@@ -101,7 +101,7 @@ stages:
                   inputs:
                     targetType: 'inline'
                     failOnStderr: true
-                    workingDirectory: $(Build.SourcesDirectory)
+                    workingDirectory: $(Build.SourcesDirectory)/0-infra-core
                     script: |
                      pwd
                      ls
