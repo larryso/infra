@@ -168,13 +168,22 @@ stages:
       displayName: '${{ parameters.stageName }} - Apply Rotate'
     ${{ if eq(parameters.action, 'none') }}:
       displayName: '${{ parameters.stageName }} - Apply None'
-    environment: ${{ parameters.adoEnvironment }}
+    
     dependsOn: 
       - ${{ parameters.stageName }}    
     jobs:
       - deployment: 'apply_${{ parameters.stageName }}'  
+        ${{ if eq(parameters.action, 'create') }}:
+          displayName: '${{ parameters.stageName }} - Apply Create'
+        ${{ if eq(parameters.action, 'destroy') }}:
+          displayName: '${{ parameters.stageName }} - Apply Destroy'
+        ${{ if eq(parameters.action, 'rotate') }}:
+          displayName: '${{ parameters.stageName }} - Apply Rotate'
+        ${{ if eq(parameters.action, 'none') }}:
+          displayName: '${{ parameters.stageName }} - Apply None'
+        environment: '${{ parameters.adoEnvironment }}'
         pool: 
-          name: 
+          name: '${{ parameters.tfPool }}'
         condition: succeeded()
         workspace:
           clean: all
@@ -244,10 +253,10 @@ stages:
                     TF_BACKEND_ENABLED: false
 
                 # Download terraform plan
-                - template: steps/download_artifact.yml
-                    parameters:
-                      artifactName: plan_tf_${{ parameters.stageName }}_${{ component.name }}_$(attemptNo)
-                      downloadPath: $(Build.SourcesDirectory)/plan_tf_${{ component.terraformCodeFolder }}
+                # - template: steps/download_artifact.yml
+                #     parameters:
+                #       artifactName: plan_tf_${{ parameters.stageName }}_${{ component.name }}_$(attemptNo)
+                #       downloadPath: $(Build.SourcesDirectory)/plan_tf_${{ component.terraformCodeFolder }}
 
                 - ${{ if eq(parameters.action, 'create') }}:
                   - task: Bash@3
