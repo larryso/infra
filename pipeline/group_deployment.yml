@@ -12,6 +12,9 @@ parameters:
     type: string
   - name: pluginCacheDir
     type: string
+  - name: terraformVersion
+    type: string
+    default: 1.14.4
 
     
 stages: 
@@ -74,4 +77,37 @@ stages:
                     workingDirectory: $(Agent.BuildDirectory)
                     script: |
                       echo "envClass: @@@@@@@@@@"
+                # Install terraform version for a component (should be taken from tools cache)
+                - task: TerraformInstaller@0
+                  displayName: Installing Terraform ${{ parameters.terraformVersion }}
+                  inputs:
+                    terraformVersion: ${{ parameters.terraformVersion }}
+
+                  # Set terraform providers permissions
+                - task: Bash@3
+                  displayName: Set terraform providers permissions
+                  inputs:
+                    targetType: 'inline'
+                    failOnStderr: true
+                    workingDirectory: $(Agent.BuildDirectory)
+                    script: |
+                      chmod -R 755 ${pluginCacheDir}/
+                  env:
+                    pluginCacheDir: ${{ parameters.pluginCacheDir }
+
+                # Run terraform init
+                - task: Bash@3
+                  displayName: Run Terraform Init 
+                  inputs:
+                    targetType: 'inline'
+                    failOnStderr: true
+                    workingDirectory: $(Build.SourcesDirectory)/0-infra-core
+                    script: |
+                     
+                      terraform init \
+                      -reconfigure \
+                      -input=false \
+                      -backend=${TF_BACKEND_ENABLED} \
+                  env:
+                    TF_BACKEND_ENABLED: ${{ parameters.backend.enabled }}
           
