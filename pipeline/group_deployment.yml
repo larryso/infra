@@ -30,25 +30,25 @@ stages:
         - ${{ dep }}
     jobs:
       - deployment: '${{ parameters.stageName }}'
-          ${{ if eq(parameters.action, 'create') }}:
-            displayName: '${{ parameters.stageName }} - Plan Create'
-          ${{ if eq(parameters.action, 'destroy') }}:
-            displayName: '${{ parameters.stageName }} - Plan Destroy'
-          ${{ if eq(parameters.action, 'rotate') }}:
-            displayName: '${{ parameters.stageName }} - Plan Rotate'
-          ${{ if eq(parameters.action, 'none') }}:
-            displayName: '${{ parameters.stageName }} - Plan None'
-          environment: '${{ parameters.adoEnvironment }}'
-          pool:
-            name: ${{ parameters.tfPool }}
-          condition: succeeded()
-          workspace:
-            clean: all
-          strategy:
-            runOnce:
-              deploy:
-                steps:
-                  - download: none
+        ${{ if eq(parameters.action, 'create') }}:
+          displayName: '${{ parameters.stageName }} - Plan Create'
+        ${{ if eq(parameters.action, 'destroy') }}:
+          displayName: '${{ parameters.stageName }} - Plan Destroy'
+        ${{ if eq(parameters.action, 'rotate') }}:
+          displayName: '${{ parameters.stageName }} - Plan Rotate'
+        ${{ if eq(parameters.action, 'none') }}:
+          displayName: '${{ parameters.stageName }} - Plan None'
+        environment: '${{ parameters.adoEnvironment }}'
+        pool:
+          name: ${{ parameters.tfPool }}
+        condition: succeeded()
+        workspace:
+          clean: all
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: none
                   # Load secrets
                   ## TODO
                   - task: DownloadPipelineArtifact@2
