@@ -147,7 +147,7 @@ stages:
                     failOnStderr: true
                     workingDirectory: $(Build.SourcesDirectory)/0-infra-core
                     script: |
-                      tmp_dir=$(mktemp -d $(Build.SourcesDirectory)/0-infra-core/${{ parameters.stageName }})
+                      tmp_dir=$(mktemp -d $(Build.SourcesDirectory)/0-infra-core/${{ parameters.stageName }}/ci-XXXXXX)
                       echo "Tempdir: ${tmp_dir}"
 
                       echo "Adding ${{ parameters.stageName }}.tfplan"
