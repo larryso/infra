@@ -15,6 +15,9 @@ parameters:
   - name: terraformVersion
     type: string
     default: 1.14.4
+  - name: parallelism
+    type: number
+    default: 1 
 
     
 stages: 
@@ -111,4 +114,28 @@ stages:
                      -backend=${TF_BACKEND_ENABLED} \
                   env:
                     TF_BACKEND_ENABLED: false
+
+                #Run Terraform plan
+                - task: TerraformCLI@0
+                  displayName: Terraform Plan
+                  env:
+                    # ALICLOUD_ACCESS_KEY: $(setSecrets.ALICLOUD_ACCESS_KEY)
+                    # ALICLOUD_SECRET_KEY: $(setSecrets.ALICLOUD_SECRET_KEY)  
+                    # ALICLOUD_REGION: $(ali.region)
+                    # ALICLOUD_OSS_ENDPOINT: $(ali.terraformState.endpoint)
+                    # TF_LOG: ${{ parameters.debug }}
+                    TF_IN_AUTOMATION: true
+                    # TF_VAR_build_number: $(Build.BuildNumber)
+                  inputs:
+                    command: plan
+                    publishPlanResults: '${{ parameters.stageName }} ${{ parameters.adoEnvironment }} ($(System.StageAttempt))' # public plan result as artifact
+                    workingDirectory: $(Build.SourcesDirectory)/0-infra-core
+                    ${{ if eq(parameters.action, 'create') }}:
+                      commandOptions: "-input=false -parallelism=${{ parameters.parallelism }} -out ${{ parameters.stageName }}.tfplan"
+                    ${{ if eq(parameters.action, 'destroy') }}:
+                      commandOptions: "-destroy -input=false -parallelism=${{ parameters.parallelism }} -out ${{ parameters.stageName }}.tfplan"
+                    ${{ if eq(parameters.action, 'rotate') }}:
+                      commandOptions: "-input=false -parallelism=${{ parameters.parallelism }} -out ${{ parameters.stageName }}.tfplan"
+                    ${{ if eq(parameters.action, 'none') }}:
+                      commandOptions: "-input=false -out ${{ parameters.stageName }}.tfplan"
           
