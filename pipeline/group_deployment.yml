@@ -101,13 +101,13 @@ stages:
                   inputs:
                     targetType: 'inline'
                     failOnStderr: true
-                    workingDirectory: $(Build.SourcesDirectory)/0-infra-core
+                    workingDirectory: $(Build.SourcesDirectory)
                     script: |
-                     
-                      terraform init \
-                      -reconfigure \
-                      -input=false \
-                      -backend=${TF_BACKEND_ENABLED} \
+                     ls
+                      # terraform init \
+                      # -reconfigure \
+                      # -input=false \
+                      # -backend=${TF_BACKEND_ENABLED} \
                   env:
                     TF_BACKEND_ENABLED: false
           
