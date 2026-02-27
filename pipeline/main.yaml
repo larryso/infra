@@ -140,7 +140,7 @@ stages:
     # envGroup: "prod"
     # envType: "controlled"
     action: ${{ parameters.action }}
-    stageName: "create"
+    stageName: "release_dev"
     adoEnvironment: "Dev"
     pluginCacheDir: ${{ parameters.pluginCacheDir }}
 
@@ -152,7 +152,7 @@ stages:
     # envGroup: "prod"
     # envType: "controlled"
     action: ${{ parameters.action }}
-    stageName: "create"
+    stageName: "release_uat"
     adoEnvironment: "Dev"
     pluginCacheDir: ${{ parameters.pluginCacheDir }}
     
@@ -164,7 +164,7 @@ stages:
     # envGroup: "prod"
     # envType: "controlled"
     action: ${{ parameters.action }}
-    stageName: "create"
+    stageName: "release_prod"
     adoEnvironment: "Dev"
     pluginCacheDir: ${{ parameters.pluginCacheDir }}
     
