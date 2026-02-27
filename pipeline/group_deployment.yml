@@ -24,10 +24,10 @@ stages:
         displayName: '${{ parameters.stageName }} - Plan Rotate'
     ${{ if eq(parameters.action, 'none') }}:
         displayName: '${{ parameters.stageName }} - Plan None'
-      dependsOn:
-        - 'initialize_DEV'
-        - ${{ each dep in parameters.dependsOn }}:
-          - ${{ dep }}
+    dependsOn:
+      - 'initialize_DEV'
+      - ${{ each dep in parameters.dependsOn }}:
+        - ${{ dep }}
       jobs:
         - deployment: '${{ parameters.stageName }}'
           ${{ if eq(parameters.action, 'create') }}:
