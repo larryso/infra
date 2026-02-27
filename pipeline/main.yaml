@@ -22,7 +22,7 @@ parameters:
     default: "create"
   - name: tfPool
     type: string
-    default: "ubuntu-latest"
+    default: "Default"
 
 # Define variables that can be used throughout the pipeline
 variables:
