@@ -136,32 +136,35 @@ stages:
 - template: group_deployment.yml
   parameters:
     tfPool: ${{ parameters.tfPool }}
-    envClass: "prod"
-    envGroup: "prod"
-    envType: "controlled"
+    # envClass: "prod"
+    # envGroup: "prod"
+    # envType: "controlled"
     action: ${{ parameters.action }}
     stageName: "create"
     adoEnvironment: "Dev"
+    pluginCacheDir: ${{ parameters.pluginCacheDir }}
 
 # Release UAT        
 - template: group_deployment.yml
   parameters:
     tfPool: ${{ parameters.tfPool }}
-    envClass: "prod"
-    envGroup: "prod"
-    envType: "controlled"
+    # envClass: "prod"
+    # envGroup: "prod"
+    # envType: "controlled"
     action: ${{ parameters.action }}
     stageName: "create"
     adoEnvironment: "Dev"
+    pluginCacheDir: ${{ parameters.pluginCacheDir }}
     
 # Release PROD        
 - template: group_deployment.yml
   parameters:
     tfPool: ${{ parameters.tfPool }}
-    envClass: "prod"
-    envGroup: "prod"
-    envType: "controlled"
+    # envClass: "prod"
+    # envGroup: "prod"
+    # envType: "controlled"
     action: ${{ parameters.action }}
     stageName: "create"
     adoEnvironment: "Dev"
+    pluginCacheDir: ${{ parameters.pluginCacheDir }}
     
