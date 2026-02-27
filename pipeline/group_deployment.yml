@@ -51,7 +51,7 @@ stages:
           runOnce:
             deploy:
               steps:
-                - download: none
+                - checkout: self
                   # Load secrets
                   ## TODO
                 - task: DownloadPipelineArtifact@2
@@ -105,10 +105,10 @@ stages:
                     script: |
                      pwd
                      ls
-                      # terraform init \
-                      # -reconfigure \
-                      # -input=false \
-                      # -backend=${TF_BACKEND_ENABLED} \
+                     -terraform init \
+                     -reconfigure \
+                     -input=false \
+                     -backend=${TF_BACKEND_ENABLED} \
                   env:
                     TF_BACKEND_ENABLED: false
           
