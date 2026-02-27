@@ -93,7 +93,7 @@ stages:
                     script: |
                       chmod -R 755 ${pluginCacheDir}/
                   env:
-                    pluginCacheDir: ${{ parameters.pluginCacheDir }
+                    pluginCacheDir: ${{ parameters.pluginCacheDir }}
 
                 # Run terraform init
                 - task: Bash@3
