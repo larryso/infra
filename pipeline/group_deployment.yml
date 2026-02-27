@@ -268,7 +268,7 @@ stages:
                       script: |
                         echo "Starting terraform apply with parallelism=${{ parameters.parallelism }}"
 
-                        #terraform apply -input=false -parallelism=${{ parameters.parallelism }} $(Build.SourcesDirectory)/plan_tf_${{ component.terraformCodeFolder }}/${{ component.name }}.tfplan
+                      
                     env:
                       # ALICLOUD_ACCESS_KEY: $(setSecrets.ALICLOUD_ACCESS_KEY)
                       # ALICLOUD_SECRET_KEY: $(setSecrets.ALICLOUD_SECRET_KEY)
