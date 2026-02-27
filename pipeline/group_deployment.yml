@@ -103,6 +103,7 @@ stages:
                     failOnStderr: true
                     workingDirectory: $(Build.SourcesDirectory)
                     script: |
+                     pwd
                      ls
                       # terraform init \
                       # -reconfigure \
